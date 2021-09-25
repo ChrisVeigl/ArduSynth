@@ -19,6 +19,8 @@
 #include <mozzi_rand.h>
 #include <EEPROM.h>
 
+// #define PCB_V1 
+
 #define DEBUG_OUTPUT 1
 #define CONTROL_RATE 64
 
@@ -33,6 +35,17 @@ int counter = 0;
 // 
 // ---- ANALOG INPUTS ----
 //
+
+#ifdef PCB_V1
+const int KNOB1_PIN = 0; // oscillator freq
+const int KNOB2_PIN = 1; // filter q
+const int KNOB3_PIN = 2; // filter freq
+const int KNOB5_PIN = 3; // playback mode
+const int KNOB7_PIN = 4; // arpeggio
+const int KNOB6_PIN = 5; // bit rate
+const int KNOB4_PIN = 6; // control speed
+const int KNOB8_PIN = 7; // sequencer speed
+#else
 const int KNOB1_PIN = 0; // oscillator freq
 const int KNOB2_PIN = 1; // filter q
 const int KNOB3_PIN = 2; // filter freq
@@ -42,6 +55,7 @@ const int KNOB6_PIN = 5; // bit rate
 const int KNOB7_PIN = 6; // arpeggio speed
 const int KNOB8_PIN = 7; // sequencer speed
 
+#endif
 
 
 // 
