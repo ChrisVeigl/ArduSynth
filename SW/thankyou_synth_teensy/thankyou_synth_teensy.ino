@@ -4,6 +4,7 @@
    https://create.arduino.cc/projecthub/scraptured/phasemod-drone-synth-w-arduino-nano-mozzi-7ab2ff
 
    modified for FuzzyK'iin V1 PCB by Chris Veigl
+   Teensy-LC version, with Midi support!
  
  */
 
@@ -23,7 +24,26 @@
 
 #define CONTROL_RATE 256
 
+#define MIDI_CHANNEL 1
+#define NUM_POTENTIOMETERS 8
+#define NUM_KEYS 3
+
+int pinKeys[NUM_KEYS]={4,5,6};
+int pinLeds[NUM_KEYS]={7,8,9};   // TBD: change to PWM-pins of TeensyLC!
+int pinPotentiometers[NUM_POTENTIOMETERS]={A1,A2,A3,A4,A5,A6,A7,A8};
+int attackFactors[NUM_KEYS]={6,4,8};
+int decayFactors[NUM_KEYS]={0,1,1};
+int ledGainFactor = 10;
+
+#define PIN_KEY_MODE 12
+#define PIN_INTERNAL_LED 13
+#define ANALOG_CHANGE_THRESHOLD 5
+#define BYPASS_MANUAL_CONTROL_TIME 800
+
 // VARIABLES
+
+ADC *myadc = new ADC(); // adc object   TBD: this is a work-around because of mozziAnalogRead() problems!
+
 AutoMap kMapCarrierFreq(0,1023,20,440);
 AutoMap kMapIntensity(0,1023,700,1);
 AutoMap kMapModSpeed(0,1023,10000,0);
@@ -37,15 +57,21 @@ Ead kEnvelope(CONTROL_RATE); // resolution will be CONTROL_RATE
 
 int actMode=0;
 int attack = 20;
-int decay = 2000;
+int envelopeLength = 2000;
 bool mode = 0;
-bool noteTrigger1 = 0;
-bool noteTrigger2 = 0;
-bool noteTrigger3 = 0;
+int bypassManualControl=0;
+
 
 int  gain=0;
 int freqs[3];
 byte wfs[3];
+
+int analogValues[NUM_POTENTIOMETERS]={0};
+int lastAnalogValues[NUM_POTENTIOMETERS]={0};
+int midiCCValues[NUM_POTENTIOMETERS]={0};
+bool noteTriggers[NUM_KEYS]={0};
+bool lastNoteTriggers[NUM_KEYS]={1};
+bool lastMode=1;
 
 int mod_ratio = 1; //frequency of the modulator as an integer multiple of the carrier
 long fm_intensity; // carries control info from updateControl to updateAudio
@@ -71,25 +97,62 @@ void setWavetables() {
   else if (wfs[2]==3) {modDepth.setTable(WAVESHAPE1_SOFTCLIP_DATA);}
 }
 
+
+void myNoteOn(byte channel, byte note, byte velocity) {
+  Serial.printf("Midi Note On: Channel %d, note %d, velocity %d\n", channel, note, velocity );
+  digitalWrite(PIN_INTERNAL_LED,HIGH);
+  bypassManualControl=BYPASS_MANUAL_CONTROL_TIME;
+  if (channel>=NUM_POTENTIOMETERS) channel=NUM_POTENTIOMETERS-1;
+  int val=(127-note)*8; if (val<0) val=0; else if (val>1023) val=1023;
+  analogValues[channel-1]=val;
+}
+void myNoteOff(byte channel, byte note, byte velocity){
+  Serial.printf("Midi Note Off: Channel %d, note %d, velocity %d\n", channel, note, velocity );
+  digitalWrite(PIN_INTERNAL_LED,LOW);
+}
+
+void updateAnalogValues() {
+  if (bypassManualControl) { 
+    bypassManualControl--; 
+    return; 
+  }
+
+  for (int i=0;i<NUM_POTENTIOMETERS;i++){
+    analogValues[i]=myadc->adc0->analogRead(pinPotentiometers[i]);  // mozziAnalogRead(i); 
+   
+    analogValues[7]=512;  // TBD: remove this when poti7 is mounted!
+
+    if (abs(lastAnalogValues[i]-analogValues[i]) > ANALOG_CHANGE_THRESHOLD) {
+            
+      int val=map(analogValues[i],0,1024,0,127);
+      if (val != midiCCValues[i]) {
+        midiCCValues[i]=val;
+        lastAnalogValues[i]=analogValues[i];
+        Serial.printf("Send CC %d -> %d\n",i,val);
+        usbMIDI.sendControlChange(i, val, MIDI_CHANNEL);
+      }
+    }
+  }
+}
+
 void readPins() {
+  updateAnalogValues();
 
-  freqs[0] = 1024-adc->adc0->analogRead(A1);
-  freqs[1] = adc->adc0->analogRead(A2);
-  freqs[2] = adc->adc0->analogRead(A3);
+  freqs[0] = 1024-analogValues[0];
+  freqs[1] = analogValues[1];
+  freqs[2] = analogValues[2];
   
-  wfs[0] = adc->adc0->analogRead(A4) >> 8;
-  wfs[1] = adc->adc0->analogRead(A5) >> 8;
-  wfs[2] = adc->adc0->analogRead(A6) >> 8;
+  wfs[0] = analogValues[3] >> 8;
+  wfs[1] = analogValues[4] >> 8;
+  wfs[2] = analogValues[5] >> 8;
 
-  mod_ratio = (adc->adc0->analogRead(A7) >> 7) + 1;
-  decay = 5000- ( adc->adc0->analogRead(A8) << 2);
+  mod_ratio = (analogValues[6] >> 7) + 1;
+  envelopeLength = 5000 - ( analogValues[7] << 2);
 
-  // Serial.println(freqs[0]);
-
-  mode = digitalRead(12);
-  noteTrigger1 = digitalRead(4);
-  noteTrigger2 = digitalRead(5);
-  noteTrigger3 = digitalRead(6);
+  mode = digitalRead(PIN_KEY_MODE);
+  for (int i=0;i<NUM_KEYS;i++) {
+    noteTriggers[i] = digitalRead(pinKeys[i]);
+  }
 }
 
 void setFrequencies() {
@@ -111,63 +174,68 @@ void setFrequencies() {
 // ################### THE GOODS! #####################
 
 void setup() {
-  delay (400);
+  delay (200);
   Serial.begin(9600);
-  Serial.print("Control Rate = ");  Serial.println(CONTROL_RATE);
 
-  pinMode(4, INPUT_PULLUP);
-  pinMode(5, INPUT_PULLUP);
-  pinMode(6, INPUT_PULLUP);
-  pinMode(12, INPUT_PULLUP);
+  pinMode(PIN_KEY_MODE, INPUT_PULLUP);
+  for (int i=0;i<NUM_KEYS;i++) {
+    pinMode(pinKeys[i], INPUT_PULLUP);
+    pinMode(pinLeds[i], OUTPUT);
+  }
 
+  pinMode(PIN_INTERNAL_LED, OUTPUT);
   pinMode(23, OUTPUT);
-  digitalWrite (23, HIGH);   // send 3,3V to Potentiometers!
-
-  pinMode(7, OUTPUT);
-  pinMode(8, OUTPUT);
-  pinMode(9, OUTPUT);
+  digitalWrite (23, HIGH);   // send 3,3V to Potentiometers!  TBD: use correct pin for TeensyLC on PCB!
 
   randSeed(); // fresh random, MUST be called before startMozzi - wierd bug
+
+  kMapCarrierFreq(0);  kMapCarrierFreq(1023);
+  kMapIntensity(0);  kMapIntensity(1023);
+  kMapModSpeed(0);  kMapModSpeed(1023);
+  kMapEnvelopeTimes(0);  kMapEnvelopeTimes(1023);
+
+  usbMIDI.setHandleNoteOff(myNoteOff);
+  usbMIDI.setHandleNoteOn(myNoteOn);
+
+  Serial.print("TeensySynth welcome!");
+  Serial.print("Control Rate = ");  Serial.println(CONTROL_RATE);
+
   startMozzi(CONTROL_RATE);
+  
 }
 
 
 void updateControl() {
-  static uint8_t noteTrigger1_old=1;
-  static uint8_t noteTrigger2_old=1;
-  static uint8_t noteTrigger3_old=1;
-  static uint8_t mode_old=1;
+  static int8_t activeKey=-1;
 
-   readPins();
+  usbMIDI.read();
+  readPins();
   setWavetables();
   setFrequencies();
 
-  if ((noteTrigger1 == 0) && (noteTrigger1_old == 1)) { 
-       kEnvelope.start(decay >> 6,decay);
-       digitalWrite(7,HIGH);  
-       actMode=1;
-  }
-  if ((noteTrigger2 == 0) && (noteTrigger2_old == 1)) { 
-       kEnvelope.start(decay >> 4,decay >> 1);
-       digitalWrite(8,HIGH);  
-       actMode=2;
-  }
-  if ((noteTrigger3 == 0) && (noteTrigger3_old == 1)) { 
-       kEnvelope.start(decay >> 8,decay >> 1);
-       digitalWrite(9,HIGH);  
-       actMode=3;
+  for (int i=0;i<NUM_KEYS;i++) {
+    if ((noteTriggers[i] == 0) && (lastNoteTriggers[i] == 1)) { 
+         kEnvelope.start(envelopeLength >> attackFactors[i],envelopeLength >> decayFactors[i]);
+         digitalWrite(pinLeds[i],HIGH);  
+         activeKey=i;
+         actMode=i+1;
+         Serial.print("Key ");  
+         Serial.print(i+1);  
+         Serial.println(" pressed!");  
+    }
+    lastNoteTriggers[i]=noteTriggers[i];
   }
        
-  if ((mode != mode_old) && ( mode == 0 )) { actMode=0; Serial.println("continous mode!");  }
-
-  noteTrigger1_old=noteTrigger1;
-  noteTrigger2_old=noteTrigger2;
-  noteTrigger3_old=noteTrigger3;
-  mode_old=mode;
+  if ((mode != lastMode) && ( mode == 0 )) { 
+    actMode=0; 
+    Serial.println("Continous mode enabled!");  
+  }
+  lastMode=mode;
 
   gain = (int) kEnvelope.next(); 
-  if (gain==0) {       digitalWrite(7,LOW);   digitalWrite(8,LOW);   digitalWrite(9,LOW); }
-
+  for (int i=0;i<NUM_KEYS;i++) {
+    if (i==activeKey) analogWrite(pinLeds[i],gain*ledGainFactor); else analogWrite(pinLeds[i],0);
+  }
 }
 
 
@@ -179,11 +247,10 @@ int updateAudio() {
     audio = carrier.phMod(mod);
   }
   else {
-    //Serial.println(gain);
     audio = (((long)carrier.phMod(mod) * gain)>>8);
   }
-//  return audio << 6; // 14-bit number for HI-FI mode
-  return audio; 
+
+  return audio<<4;  // 12-bit audio signal for TeensyLC 
 }
 
 void loop() {
