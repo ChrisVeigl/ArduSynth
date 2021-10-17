@@ -28,14 +28,14 @@
 #define NUM_POTENTIOMETERS 8
 #define NUM_KEYS 3
 
-int pinKeys[NUM_KEYS]={4,5,6};
-int pinLeds[NUM_KEYS]={7,8,9};   // TBD: change to PWM-pins of TeensyLC!
+int pinKeys[NUM_KEYS]={4,5,6};   // TBD: change to key-pins of TeensyLC!  {7,8,9}
+int pinLeds[NUM_KEYS]={7,8,9};   // TBD: change to PWM-pins of TeensyLC!  {3,4,6}
 int pinPotentiometers[NUM_POTENTIOMETERS]={A1,A2,A3,A4,A5,A6,A7,A8};
 int attackFactors[NUM_KEYS]={6,4,8};
 int decayFactors[NUM_KEYS]={0,1,1};
 int ledGainFactor = 10;
 
-#define PIN_KEY_MODE 12
+#define PIN_KEY_MODE 12         // TBD: change to key-pin of TeensyLC!  10
 #define PIN_INTERNAL_LED 13
 #define ANALOG_CHANGE_THRESHOLD 5
 #define BYPASS_MANUAL_CONTROL_TIME 800
