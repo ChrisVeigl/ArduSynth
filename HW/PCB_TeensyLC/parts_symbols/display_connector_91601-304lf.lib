@@ -1,0 +1,26 @@
+EESchema-LIBRARY Version 2.4
+#encoding utf-8
+#
+# dispaly_connector_91601-304LF
+#
+DEF dispaly_connector_91601-304LF J 0 30 Y Y 1 F N
+F0 "J" 300 300 50 H V L CNN
+F1 "dispaly_connector_91601-304LF" 250 200 50 H V L CNN
+F2 "91601304LF" 1200 50 50 H I L CNN
+F3 "http://www.mouser.com/datasheet/2/18/91601-1289404.pdf" 1200 -50 50 H I L CNN
+F4 "Dubox 2.54mm, Board to Board Connector, PCB Mounted Receptacle, Vertical , Surface Mount, Dual Entry ,Single row , 4 Positions, 2.54mm (0.100in) Pitch" 1200 -150 50 H I L CNN "Description"
+F5 "8" 1200 -250 50 H I L CNN "Height"
+F6 "649-91601-304LF" 1200 -350 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.com/Search/Refine.aspx?Keyword=649-91601-304LF" 1200 -450 50 H I L CNN "Mouser Price/Stock"
+F8 "Amphenol" 200 -550 50 H I L CNN "Manufacturer_Name"
+F9 "91601-304LF" 200 -650 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+P 5 0 1 6 200 100 600 100 600 -400 200 -400 200 100 N
+X 1 1 0 0 200 R 50 50 0 0 P
+X 3 3 0 -100 200 R 50 50 0 0 P
+X 5 5 0 -200 200 R 50 50 0 0 P
+X 7 7 0 -300 200 R 50 50 0 0 P
+ENDDRAW
+ENDDEF
+#
+#End Library

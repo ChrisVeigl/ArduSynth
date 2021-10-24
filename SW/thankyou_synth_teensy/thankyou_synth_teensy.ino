@@ -8,7 +8,7 @@
  
  */
 
-#include <ADC.h>
+//#include <ADC.h>
 
 #include <MozziGuts.h>
 #include <Oscil.h>
@@ -42,7 +42,7 @@ int ledGainFactor = 10;
 
 // VARIABLES
 
-ADC *myadc = new ADC(); // adc object   TBD: this is a work-around because of mozziAnalogRead() problems!
+// ADC *myadc = new ADC(); // adc object   TBD: this is a work-around because of mozziAnalogRead() problems!
 
 AutoMap kMapCarrierFreq(0,1023,20,440);
 AutoMap kMapIntensity(0,1023,700,1);
@@ -118,7 +118,7 @@ void updateAnalogValues() {
   }
 
   for (int i=0;i<NUM_POTENTIOMETERS;i++){
-    analogValues[i]=myadc->adc0->analogRead(pinPotentiometers[i]);  // mozziAnalogRead(i); 
+    analogValues[i]=mozziAnalogRead(pinPotentiometers[i]);  // mozziAnalogRead(i); 
    
     analogValues[7]=512;  // TBD: remove this when poti7 is mounted!
 

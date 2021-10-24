@@ -98,9 +98,9 @@ $FPLIST
  LED_THT:*
 $ENDFPLIST
 DRAW
-P 2 0 1 8 -50 -50 -50 50 N
+P 2 0 1 10 -50 -50 -50 50 N
 P 2 0 1 0 -50 0 50 0 N
-P 4 0 1 8 50 -50 50 50 -50 0 50 -50 N
+P 4 0 1 10 50 -50 50 50 -50 0 50 -50 N
 P 5 0 1 0 -120 -30 -180 -90 -150 -90 -180 -90 -180 -60 N
 P 5 0 1 0 -70 -30 -130 -90 -100 -90 -130 -90 -130 -60 N
 X K 1 -150 0 100 R 50 50 1 1 P
@@ -153,6 +153,43 @@ X ~ 2 0 -150 50 U 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
+# Mechanical_MountingHole
+#
+DEF Mechanical_MountingHole H 0 40 Y Y 1 F N
+F0 "H" 0 200 50 H V C CNN
+F1 "Mechanical_MountingHole" 0 125 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+$FPLIST
+ MountingHole*
+$ENDFPLIST
+DRAW
+C 0 0 50 0 1 50 N
+ENDDRAW
+ENDDEF
+#
+# SSD1306_display_connector_dispaly_connector_91601-304LF
+#
+DEF SSD1306_display_connector_dispaly_connector_91601-304LF J 0 30 Y Y 1 F N
+F0 "J" 300 300 50 H V L CNN
+F1 "SSD1306_display_connector_dispaly_connector_91601-304LF" 250 200 50 H V L CNN
+F2 "91601304LF" 1200 50 50 H I L CNN
+F3 "http://www.mouser.com/datasheet/2/18/91601-1289404.pdf" 1200 -50 50 H I L CNN
+F4 "Dubox 2.54mm, Board to Board Connector, PCB Mounted Receptacle, Vertical , Surface Mount, Dual Entry ,Single row , 4 Positions, 2.54mm (0.100in) Pitch" 1200 -150 50 H I L CNN "Description"
+F5 "8" 1200 -250 50 H I L CNN "Height"
+F6 "649-91601-304LF" 1200 -350 50 H I L CNN "Mouser Part Number"
+F7 "https://www.mouser.com/Search/Refine.aspx?Keyword=649-91601-304LF" 1200 -450 50 H I L CNN "Mouser Price/Stock"
+F8 "Amphenol" 200 -550 50 H I L CNN "Manufacturer_Name"
+F9 "91601-304LF" 200 -650 50 H I L CNN "Manufacturer_Part_Number"
+DRAW
+P 5 0 1 6 200 100 600 100 600 -400 200 -400 200 100 N
+X 1 1 0 0 200 R 50 50 0 0 P
+X 3 3 0 -100 200 R 50 50 0 0 P
+X 5 5 0 -200 200 R 50 50 0 0 P
+X 7 7 0 -300 200 R 50 50 0 0 P
+ENDDRAW
+ENDDEF
+#
 # Switch_SW_Push
 #
 DEF Switch_SW_Push SW 0 40 N N 1 F N
@@ -193,55 +230,11 @@ X ~ T 200 -100 100 L 50 50 1 1 P
 ENDDRAW
 ENDDEF
 #
-# power_+3.3V
+# arduSynth-rescue_Teensy-LC-teensy
 #
-DEF power_+3.3V #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -150 50 H I C CNN
-F1 "power_+3.3V" 0 140 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-ALIAS +3.3V
-DRAW
-P 2 0 1 0 -30 50 0 100 N
-P 2 0 1 0 0 0 0 100 N
-P 2 0 1 0 0 100 30 50 N
-X +3V3 1 0 0 0 U 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_+5V
-#
-DEF power_+5V #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -150 50 H I C CNN
-F1 "power_+5V" 0 140 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 2 0 1 0 -30 50 0 100 N
-P 2 0 1 0 0 0 0 100 N
-P 2 0 1 0 0 100 30 50 N
-X +5V 1 0 0 0 U 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# power_GND
-#
-DEF power_GND #PWR 0 0 Y Y 1 F P
-F0 "#PWR" 0 -250 50 H I C CNN
-F1 "power_GND" 0 -150 50 H V C CNN
-F2 "" 0 0 50 H I C CNN
-F3 "" 0 0 50 H I C CNN
-DRAW
-P 6 0 1 0 0 0 0 -50 50 -50 0 -100 -50 -50 0 -50 N
-X GND 1 0 0 0 D 50 50 1 1 W N
-ENDDRAW
-ENDDEF
-#
-# teensy_Teensy-LC
-#
-DEF teensy_Teensy-LC U 0 40 Y Y 1 F N
+DEF arduSynth-rescue_Teensy-LC-teensy U 0 40 Y Y 1 F N
 F0 "U" 0 1150 60 H V C CNN
-F1 "teensy_Teensy-LC" 0 -1150 60 H V C CNN
+F1 "arduSynth-rescue_Teensy-LC-teensy" 0 -1150 60 H V C CNN
 F2 "" 0 -550 60 H V C CNN
 F3 "" 0 -550 60 H V C CNN
 DRAW
@@ -287,6 +280,50 @@ X 4_TX1_PWM_Touch 6 -1150 450 200 R 50 50 1 1 B
 X 5_TX1_MISO1 7 -1150 350 200 R 50 50 1 1 B
 X 6_RX3_CS1_PWM 8 -1150 250 200 R 50 50 1 1 B
 X 7_RX3_MOSI0 9 -1150 150 200 R 50 50 1 1 B
+ENDDRAW
+ENDDEF
+#
+# power_+3.3V
+#
+DEF power_+3.3V #PWR 0 0 Y Y 1 F P
+F0 "#PWR" 0 -150 50 H I C CNN
+F1 "power_+3.3V" 0 140 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+ALIAS +3.3V
+DRAW
+P 2 0 1 0 -30 50 0 100 N
+P 2 0 1 0 0 0 0 100 N
+P 2 0 1 0 0 100 30 50 N
+X +3V3 1 0 0 0 U 50 50 1 1 W N
+ENDDRAW
+ENDDEF
+#
+# power_+5V
+#
+DEF power_+5V #PWR 0 0 Y Y 1 F P
+F0 "#PWR" 0 -150 50 H I C CNN
+F1 "power_+5V" 0 140 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+DRAW
+P 2 0 1 0 -30 50 0 100 N
+P 2 0 1 0 0 0 0 100 N
+P 2 0 1 0 0 100 30 50 N
+X +5V 1 0 0 0 U 50 50 1 1 W N
+ENDDRAW
+ENDDEF
+#
+# power_GND
+#
+DEF power_GND #PWR 0 0 Y Y 1 F P
+F0 "#PWR" 0 -250 50 H I C CNN
+F1 "power_GND" 0 -150 50 H V C CNN
+F2 "" 0 0 50 H I C CNN
+F3 "" 0 0 50 H I C CNN
+DRAW
+P 6 0 1 0 0 0 0 -50 50 -50 0 -100 -50 -50 0 -50 N
+X GND 1 0 0 0 D 50 50 1 1 W N
 ENDDRAW
 ENDDEF
 #
