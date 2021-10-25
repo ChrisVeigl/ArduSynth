@@ -713,28 +713,6 @@ Wire Wire Line
 	8950 6050 8950 5950
 Connection ~ 8950 5950
 $Comp
-L Connector:Screw_Terminal_01x02 J14
-U 1 1 61228DB8
-P 1500 1100
-F 0 "J14" V 1800 1100 50  0000 R CNN
-F 1 "Screw_Terminal_01x02" V 1700 1450 50  0000 R CNN
-F 2 "TerminalBlock:TerminalBlock_bornier-2_P5.08mm" H 1500 1100 50  0001 C CNN
-F 3 "~" H 1500 1100 50  0001 C CNN
-	1    1500 1100
-	0    -1   -1   0   
-$EndComp
-$Comp
-L Connector:Screw_Terminal_01x02 J11
-U 1 1 612296C7
-P 3250 1050
-F 0 "J11" V 3500 1100 50  0000 R CNN
-F 1 "Screw_Terminal_01x02" V 3400 1400 50  0000 R CNN
-F 2 "TerminalBlock:TerminalBlock_bornier-2_P5.08mm" H 3250 1050 50  0001 C CNN
-F 3 "~" H 3250 1050 50  0001 C CNN
-	1    3250 1050
-	0    -1   -1   0   
-$EndComp
-$Comp
 L Connector:Conn_01x02_Male J12
 U 1 1 6122BFF0
 P 3350 6000
@@ -763,19 +741,6 @@ $EndComp
 Wire Wire Line
 	3350 5450 3350 5650
 Connection ~ 3350 5650
-$Comp
-L power:GND #PWR0130
-U 1 1 612467D9
-P 1600 1500
-F 0 "#PWR0130" H 1600 1250 50  0001 C CNN
-F 1 "GND" H 1605 1327 50  0000 C CNN
-F 2 "" H 1600 1500 50  0001 C CNN
-F 3 "" H 1600 1500 50  0001 C CNN
-	1    1600 1500
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	1600 1300 1600 1500
 $Comp
 L power:GND #PWR0131
 U 1 1 6124BDD7
@@ -869,17 +834,6 @@ F 3 "" H 5150 4250 50  0001 C CNN
 $EndComp
 Wire Wire Line
 	5250 4250 5150 4250
-$Comp
-L power:+5V #PWR0132
-U 1 1 6172BB98
-P 1500 1300
-F 0 "#PWR0132" H 1500 1150 50  0001 C CNN
-F 1 "+5V" H 1515 1473 50  0000 C CNN
-F 2 "" H 1500 1300 50  0001 C CNN
-F 3 "" H 1500 1300 50  0001 C CNN
-	1    1500 1300
-	-1   0    0    1   
-$EndComp
 $Comp
 L power:+5V #PWR0133
 U 1 1 6172BCF8
@@ -1224,4 +1178,30 @@ F 3 "~" H 900 7400 50  0001 C CNN
 	1    900  7400
 	1    0    0    -1  
 $EndComp
+$Comp
+L Connector:Screw_Terminal_01x03 J11
+U 1 1 6177C5E9
+P 3250 1050
+F 0 "J11" V 3214 862 50  0000 R CNN
+F 1 "Screw_Terminal_01x03" V 3123 862 50  0000 R CNN
+F 2 "TerminalBlock:TerminalBlock_bornier-3_P5.08mm" H 3250 1050 50  0001 C CNN
+F 3 "~" H 3250 1050 50  0001 C CNN
+	1    3250 1050
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:+3.3V #PWR03
+U 1 1 6178DD15
+P 2850 1050
+F 0 "#PWR03" H 2850 900 50  0001 C CNN
+F 1 "+3.3V" V 2850 1300 50  0000 C CNN
+F 2 "" H 2850 1050 50  0001 C CNN
+F 3 "" H 2850 1050 50  0001 C CNN
+	1    2850 1050
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3150 1250 2850 1250
+Wire Wire Line
+	2850 1250 2850 1050
 $EndSCHEMATC
