@@ -119,7 +119,8 @@ void updateAnalogValues() {
    
     analogValues[7]=512;  // TBD: remove this when poti7 is mounted!
 
-    if (abs(lastAnalogValues[i]-analogValues[i]) > ANALOG_CHANGE_THRESHOLD) {
+    int difference=lastAnalogValues[i]-analogValues[i];
+    if (abs(difference) > ANALOG_CHANGE_THRESHOLD) {
             
       int val=map(analogValues[i],0,1024,0,127);
       if (val != midiCCValues[i]) {
