@@ -1,0 +1,13 @@
+
+Arduino Nano: https://de.aliexpress.com/item/32824272738.html
+Potentiomenter + Knobs: https://de.aliexpress.com/item/1005001346661310.html
+
+other parts:
+https://www.digikey.at/product-detail/de/w%C3%BCrth-elektronik/430476085716/430476085716-ND/5209048
+https://www.digikey.at/product-detail/de/creeled-inc/C503B-BCS-CV0Z0461/C503B-BCS-CV0Z0461-ND/1922944
+https://www.digikey.at/product-detail/de/stackpole-electronics-inc/CF14JT470R/CF14JT470RCT-ND/1830342
+https://www.digikey.at/product-detail/de/harwin-inc/M20-9990345/952-2263-ND/3728227
+https://www.digikey.at/product-detail/de/sullins-connector-solutions/NPC02SXON-RC/S9341-ND/2618266
+https://www.digikey.at/product-detail/de/adam-tech/EB147A-02-D/2057-EB147A-02-D-ND/9830728
+https://at.rs-online.com/web/p/klinken-steckerbuchsen/8051655
+
