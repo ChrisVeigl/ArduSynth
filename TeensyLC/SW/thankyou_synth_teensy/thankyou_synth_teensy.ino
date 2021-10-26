@@ -3,12 +3,11 @@
    Based upon "Thankyou Synth" - by Daniel Sinderson 
    https://create.arduino.cc/projecthub/scraptured/phasemod-drone-synth-w-arduino-nano-mozzi-7ab2ff
 
-   modified for FuzzyK'iin V1 PCB by Chris Veigl
+   modified for Teensynth PCB by Chris Veigl
    Teensy-LC version, with Midi support!
  
  */
 
-//#include <ADC.h>
 
 #include <MozziGuts.h>
 #include <Oscil.h>
@@ -41,8 +40,6 @@ int ledGainFactor = 10;
 #define BYPASS_MANUAL_CONTROL_TIME 800
 
 // VARIABLES
-
-// ADC *myadc = new ADC(); // adc object   TBD: this is a work-around because of mozziAnalogRead() problems!
 
 AutoMap kMapCarrierFreq(0,1023,20,440);
 AutoMap kMapIntensity(0,1023,700,1);
@@ -118,7 +115,7 @@ void updateAnalogValues() {
   }
 
   for (int i=0;i<NUM_POTENTIOMETERS;i++){
-    analogValues[i]=mozziAnalogRead(pinPotentiometers[i]);  // mozziAnalogRead(i); 
+    analogValues[i]=analogRead(pinPotentiometers[i]);  // mozziAnalogRead(i); 
    
     analogValues[7]=512;  // TBD: remove this when poti7 is mounted!
 
