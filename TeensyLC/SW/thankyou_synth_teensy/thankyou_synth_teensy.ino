@@ -21,6 +21,8 @@
 #include <tables/waveshape1_softclip_int8.h>
 #include <tables/saw256_int8.h>
 
+#include "frequencyTable.h"
+
 #define CONTROL_RATE 256
 
 #define MIDI_CHANNEL 1
@@ -57,6 +59,7 @@ int attack = 20;
 int envelopeLength = 2000;
 bool mode = 0;
 int bypassManualControl=0;
+float midiToneFrequency =0;
 
 
 int  gain=0;
@@ -94,14 +97,18 @@ void setWavetables() {
   else if (wfs[2]==3) {modDepth.setTable(WAVESHAPE1_SOFTCLIP_DATA);}
 }
 
-
+// midi note-on handler
+// this maps incoming midi note-on values (per channels) to the analog potentiometer values
+// and bypasses the manual potentiomenter control for a certain time
 void myNoteOn(byte channel, byte note, byte velocity) {
   Serial.printf("Midi Note On: Channel %d, note %d, velocity %d\n", channel, note, velocity );
   digitalWrite(PIN_INTERNAL_LED,HIGH);
   bypassManualControl=BYPASS_MANUAL_CONTROL_TIME;
+  if (channel<1) channel=1;
   if (channel>=NUM_POTENTIOMETERS) channel=NUM_POTENTIOMETERS-1;
   int val=(127-note)*8; if (val<0) val=0; else if (val>1023) val=1023;
   analogValues[channel-1]=val;
+  if (channel == 1) midiToneFrequency=frequencyTable[note];
 }
 void myNoteOff(byte channel, byte note, byte velocity){
   Serial.printf("Midi Note Off: Channel %d, note %d, velocity %d\n", channel, note, velocity );
@@ -154,8 +161,16 @@ void readPins() {
 }
 
 void setFrequencies() {
-    int carrier_freq = kMapCarrierFreq(freqs[0]);
-    if (actMode) carrier_freq*=actMode;
+    int carrier_freq;
+    
+    if (bypassManualControl) {     // control carrier frequency via midi-in
+      carrier_freq = midiToneFrequency;    // get carrier frequency from last midi input (note-on)
+    }
+    else {   // control carrier frequency via potentiometer
+      carrier_freq = kMapCarrierFreq(freqs[0]);
+      if (actMode) carrier_freq*=actMode;  // modify carrier frequency according to pressed buttons
+    }
+
     int mod_freq = carrier_freq * mod_ratio;
 
     int intensity_calibrated = kMapIntensity(freqs[2]);
