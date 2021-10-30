@@ -60,7 +60,7 @@ int envelopeLength = 2000;
 bool mode = 0;
 int bypassManualControl=0;
 float midiToneFrequency =0;
-
+int8_t activeKey=-1;
 
 int  gain=0;
 int freqs[3];
@@ -109,6 +109,8 @@ void myNoteOn(byte channel, byte note, byte velocity) {
   int val=(127-note)*8; if (val<0) val=0; else if (val>1023) val=1023;
   analogValues[channel-1]=val;
   if (channel == 1) midiToneFrequency=frequencyTable[note];
+
+  kEnvelope.start(envelopeLength >> attackFactors[activeKey],envelopeLength >> decayFactors[activeKey]);
 }
 void myNoteOff(byte channel, byte note, byte velocity){
   Serial.printf("Midi Note Off: Channel %d, note %d, velocity %d\n", channel, note, velocity );
@@ -219,7 +221,6 @@ void setup() {
 
 
 void updateControl() {
-  static int8_t activeKey=-1;
 
   usbMIDI.read();
   readPins();
