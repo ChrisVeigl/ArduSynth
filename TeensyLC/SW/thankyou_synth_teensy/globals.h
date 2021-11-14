@@ -1,0 +1,18 @@
+
+
+#ifndef _GLOBALS_H_
+#define _GLOBALS_H_
+
+#define CONTROL_RATE 256
+#define DISPLAY_UPDATE_TIME 100
+
+#define MIDI_CHANNEL 1
+#define NUM_POTENTIOMETERS 8
+#define NUM_KEYS 4
+
+#define PIN_INTERNAL_LED 13
+#define ANALOG_CHANGE_THRESHOLD 5
+#define BYPASS_MANUAL_CONTROL_TIME 800
+
+
+#endif
