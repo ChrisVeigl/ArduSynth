@@ -16,6 +16,18 @@
 #include <Ead.h> // exponential attack decay
 #include <mozzi_rand.h>
 
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 32 // OLED display height, in pixels
+
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+#define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
+#define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire1, OLED_RESET);
+
 #include <tables/sin256_int8.h>
 #include <tables/halfsin256_uint8.h>
 #include <tables/waveshape1_softclip_int8.h>
@@ -29,14 +41,14 @@
 #define NUM_POTENTIOMETERS 8
 #define NUM_KEYS 3
 
-int pinKeys[NUM_KEYS]={4,5,6};   // TBD: change to key-pins of TeensyLC!  {7,8,9}
-int pinLeds[NUM_KEYS]={7,8,9};   // TBD: change to PWM-pins of TeensyLC!  {3,4,6}
+int pinKeys[NUM_KEYS]={7,8,9};   // TBD: change to key-pins of TeensyLC!  {7,8,9}
+int pinLeds[NUM_KEYS]={3,4,6};   // TBD: change to PWM-pins of TeensyLC!  {3,4,6}
 int pinPotentiometers[NUM_POTENTIOMETERS]={A1,A2,A3,A4,A5,A6,A7,A8};
 int attackFactors[NUM_KEYS]={6,4,8};
 int decayFactors[NUM_KEYS]={0,1,1};
 int ledGainFactor = 10;
 
-#define PIN_KEY_MODE 12         // TBD: change to key-pin of TeensyLC!  10
+#define PIN_KEY_MODE 10         // TBD: change to key-pin of TeensyLC!  10
 #define PIN_INTERNAL_LED 13
 #define ANALOG_CHANGE_THRESHOLD 5
 #define BYPASS_MANUAL_CONTROL_TIME 800
@@ -61,6 +73,8 @@ bool mode = 0;
 int bypassManualControl=0;
 float midiToneFrequency =0;
 int8_t activeKey=-1;
+uint32_t lastMidiUpdate=0;
+
 
 int  gain=0;
 int freqs[3];
@@ -101,7 +115,9 @@ void setWavetables() {
 // this maps incoming midi note-on values (per channels) to the analog potentiometer values
 // and bypasses the manual potentiomenter control for a certain time
 void myNoteOn(byte channel, byte note, byte velocity) {
-  Serial.printf("Midi Note On: Channel %d, note %d, velocity %d\n", channel, note, velocity );
+  Serial.print("Midi Note On: Channel "); Serial.print(channel); 
+  Serial.print(" note ");Serial.print(note); Serial.print(" velocity ");Serial.println(velocity);
+  
   digitalWrite(PIN_INTERNAL_LED,HIGH);
   bypassManualControl=BYPASS_MANUAL_CONTROL_TIME;
   if (channel<1) channel=1;
@@ -113,9 +129,12 @@ void myNoteOn(byte channel, byte note, byte velocity) {
   kEnvelope.start(envelopeLength >> attackFactors[activeKey],envelopeLength >> decayFactors[activeKey]);
 }
 void myNoteOff(byte channel, byte note, byte velocity){
-  Serial.printf("Midi Note Off: Channel %d, note %d, velocity %d\n", channel, note, velocity );
+  Serial.print("Midi Note Off: Channel "); Serial.print(channel); 
+  Serial.print(" note ");Serial.print(note); Serial.print(" velocity ");Serial.println(velocity);
   digitalWrite(PIN_INTERNAL_LED,LOW);
 }
+
+char msg[]="CC -     ";
 
 void updateAnalogValues() {
   if (bypassManualControl) { 
@@ -124,19 +143,33 @@ void updateAnalogValues() {
   }
 
   for (int i=0;i<NUM_POTENTIOMETERS;i++){
-    analogValues[i]=analogRead(pinPotentiometers[i]);  // mozziAnalogRead(i); 
-   
-    analogValues[7]=512;  // TBD: remove this when poti7 is mounted!
 
+    analogValues[i]=analogRead(pinPotentiometers[i]);  // mozziAnalogRead(i); 
+ 
     int difference=lastAnalogValues[i]-analogValues[i];
     if (abs(difference) > ANALOG_CHANGE_THRESHOLD) {
             
       int val=map(analogValues[i],0,1024,0,127);
-      if (val != midiCCValues[i]) {
+      if ((val != midiCCValues[i]) && (millis() - lastMidiUpdate > 20))  {
+
+        lastMidiUpdate = millis();
+        
         midiCCValues[i]=val;
         lastAnalogValues[i]=analogValues[i];
-        Serial.printf("Send CC %d -> %d\n",i,val);
+        Serial.print("Send CC ");Serial.print(i);Serial.print(" -> ");Serial.println(val);
         usbMIDI.sendControlChange(i, val, MIDI_CHANNEL);
+
+        msg[2]='0'+i;
+        msg[7]=val%10+'0'; val/=10;
+        msg[6]=val%10+'0'; val/=10;
+        msg[5]=val%10+'0'; val/=10;
+        msg[4]=val%10+'0'; val/=10;
+
+        display.clearDisplay();
+        display.setCursor(0,0);             // Start at top-left corner
+        display.print(msg);
+        display.display();
+        
       }
     }
   }
@@ -154,7 +187,7 @@ void readPins() {
   wfs[2] = analogValues[5] >> 8;
 
   mod_ratio = (analogValues[6] >> 7) + 1;
-  envelopeLength = 5000 - ( analogValues[7] << 2);
+  envelopeLength = 4500 - ( analogValues[7] << 2);
 
   mode = digitalRead(PIN_KEY_MODE);
   for (int i=0;i<NUM_KEYS;i++) {
@@ -186,6 +219,7 @@ void setFrequencies() {
 }
 
 
+
 // ################### THE GOODS! #####################
 
 void setup() {
@@ -212,11 +246,38 @@ void setup() {
   usbMIDI.setHandleNoteOff(myNoteOff);
   usbMIDI.setHandleNoteOn(myNoteOn);
 
-  Serial.print("TeensySynth welcome!");
+  if(!display.begin( SCREEN_ADDRESS)) {
+    Serial.println(F("SSD1306 allocation failed"));
+  }
+
+  display.clearDisplay();
+  display.display();
+  display.setTextSize(2);             // Normal 1:1 pixel scale
+  display.setTextColor(SSD1306_WHITE);        // Draw white text
+  display.setCursor(10,10);             // Start at top-left corner
+  display.print("TeenSynth");
+  display.display();
+  delay(1000);
+  display.clearDisplay();
+  display.display();
+  delay(200);
+
+  for(int16_t i=max(display.width(),display.height())/2; i>0; i-=5) {
+    // The INVERSE color is used so triangles alternate white/black
+    display.fillTriangle(
+      display.width()/2  , display.height()/2-i,
+      display.width()/2-i, display.height()/2+i,
+      display.width()/2+i, display.height()/2+i, SSD1306_INVERSE);
+    display.display();
+    delay(1);
+  }
+  display.display();
+  delay(2000);
+
+  Serial.println("TeensySynth welcome!");
   Serial.print("Control Rate = ");  Serial.println(CONTROL_RATE);
 
-  startMozzi(CONTROL_RATE);
-  
+  startMozzi(CONTROL_RATE);  
 }
 
 
@@ -226,6 +287,8 @@ void updateControl() {
   readPins();
   setWavetables();
   setFrequencies();
+
+
 
   for (int i=0;i<NUM_KEYS;i++) {
     if ((noteTriggers[i] == 0) && (lastNoteTriggers[i] == 1)) { 

@@ -10,3 +10,15 @@ and the "Thankyou Drone Synth" by Daniel Sinderson, see:
 
 The KICad projects (Schematics, PCB) are available in the respective HW folders, partnumbers @ digikey / Aliexpress are provided.
 
+## Build instructions and Dependencies
+
+* for compiling the software, the Mozzi-Library must be installed / copied to the Arduino libraries folder, see:
+https://github.com/sensorium/Mozzi 
+Please note that for the TeensyLC version, currently this branch must be used: https://github.com/tomcombriat/Mozzi/tree/Teensy4X
+* the TeensyLC version makes use of the LC-display library: https://github.com/lexus2k/ssd1306
+* in order to use the correct I2C interface for the LDC, the Wire1 interface mus be enabled either by adding -DWIRE_IMPLEMENT_WIRE1 to the teensyLC.build.flags.defs in the file Arduino\hardware\teensy\avr\boards.txt file or by uncommenting this definition in the file Arduino\hardware\teensy\avr\libraries\Wire\WireKinetis.h
+
+
+
+
+
