@@ -16,7 +16,8 @@
 
 int pinKeys[NUM_KEYS]={7,8,9,10}; 
 int pinLeds[NUM_KEYS-1]={3,4,6}; 
-int pinPotentiometers[NUM_POTENTIOMETERS]={A1,A2,A3,A4,A5,A6,A7,A8};
+int pinPotentiometers[NUM_POTENTIOMETERS]= {A10,A5,A3,A1,A7,A6,A4,A2}; // {A1,A2,A3,A4,A5,A6,A7,A8};
+                                         
 
 int bypassManualControl=0;
 uint32_t lastDisplayUpdate=0;

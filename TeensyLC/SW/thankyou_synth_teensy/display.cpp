@@ -1,16 +1,18 @@
 
 #include <Adafruit_GFX.h>
-#include <Adafruit_SSD1306.h>
+#include "src/Adafruit_SSD1306.h"
 
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 32 // OLED display height, in pixels
 
 // Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+//   using 1MHz I2C clock frequency
 #define OLED_RESET     -1 // Reset pin # (or -1 if sharing Arduino reset pin)
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
-Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire1, OLED_RESET);
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire1, OLED_RESET,1000000,1000000);
 
 char msg[20];
+
 
 void initDisplay (void) {
   if(!display.begin( SCREEN_ADDRESS)) {
@@ -40,10 +42,12 @@ void initDisplay (void) {
   }
   display.display();
   delay(2000);
+
 }
 
+
 void updateDisplayMessage(uint8_t chn, uint16_t val) {
-  sprintf(msg,"CC%d->%d",chn,val); 
+  sprintf(msg,"CC%d->%d",chn+1,val); 
   display.clearDisplay();
   display.setCursor(5,10);
   display.print(msg);
