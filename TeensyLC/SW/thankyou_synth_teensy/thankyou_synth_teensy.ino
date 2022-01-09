@@ -19,12 +19,12 @@ int pinLeds[NUM_KEYS-1]={3,4,6};
 int pinPotentiometers[NUM_POTENTIOMETERS]= {A10,A5,A3,A1,A7,A6,A4,A2}; // {A1,A2,A3,A4,A5,A6,A7,A8};
                                          
 
-int bypassManualControl=0;
 uint32_t lastDisplayUpdate=0;
 
 int midiCCValues[NUM_POTENTIOMETERS]={0};
 int analogValues[NUM_POTENTIOMETERS]={0};
 int lastAnalogValues[NUM_POTENTIOMETERS]={0};
+int lockAnalogValues[NUM_POTENTIOMETERS]={-1};
 bool keys[NUM_KEYS]={0};
 
 
@@ -36,10 +36,10 @@ void myNoteOn(byte channel, byte note, byte velocity) {
   Serial.print(" note ");Serial.print(note); Serial.print(" velocity ");Serial.println(velocity);
   
   digitalWrite(PIN_INTERNAL_LED,HIGH);
-  
-  bypassManualControl=BYPASS_MANUAL_CONTROL_TIME;  // currently, midi in bypasses all manual controls for a certain time
-                                                   // TBD: improve this concept ...
+                                                  
   int val=(127-note)*8; if (val<0) val=0; else if (val>1023) val=1023;
+
+  lockAnalogValues[channel-1]=analogRead(pinPotentiometers[channel-1]);
   analogValues[channel-1]=val;
   handleMidiNote(channel, note, velocity);
 }
@@ -52,15 +52,19 @@ void myNoteOff(byte channel, byte note, byte velocity){
 
 
 void updateAnalogValues() {
-  if (bypassManualControl) { 
-    bypassManualControl--;
-    if (! bypassManualControl) 
-      setCarrierFrequency (-1);  // disable midi-controlled carrier frequency
-    return; 
-  }
+
   uint32_t timestamp=micros();
   for (int i=0;i<NUM_POTENTIOMETERS;i++){
-    analogValues[i]=analogRead(pinPotentiometers[i]);  // mozziAnalogRead(i); 
+    uint16_t actAnalogValue=analogRead(pinPotentiometers[i]);  // mozziAnalogRead(i); 
+    if (lockAnalogValues[i]>-1) {  
+      int difference=lockAnalogValues[i]-actAnalogValue;
+      if (abs(difference) > ANALOG_CHANGE_THRESHOLD)  {
+        lockAnalogValues[i]=-1;
+        analogValues[i]=actAnalogValue;
+      }
+    }
+    else analogValues[i]=actAnalogValue;
+    
     int difference=lastAnalogValues[i]-analogValues[i];
     if (abs(difference) > ANALOG_CHANGE_THRESHOLD) {
             
@@ -74,6 +78,11 @@ void updateAnalogValues() {
         if (millis() - lastDisplayUpdate > DISPLAY_UPDATE_TIME)  {
           lastDisplayUpdate = millis();
           updateDisplayMessage(i,val);
+          if (!keys[NUM_KEYS-1]) {    // if key4 is pressed: send act poti value to connected boards!
+            Serial1.write((uint8_t)CMD_SET_POTI+i);
+            Serial1.write((uint8_t)(analogValues[i]>>8));
+            Serial1.write((uint8_t)(analogValues[i]&0xff));
+          }
         }
       }
     }
@@ -91,6 +100,7 @@ void updateKeys() {
 void setup() {
   delay (200);
   Serial.begin(9600);
+  Serial1.begin(115200);
 
   pinMode(PIN_INTERNAL_LED, OUTPUT);
   for (int i=0;i<NUM_KEYS;i++) 
@@ -110,15 +120,28 @@ void setup() {
   startMozzi(CONTROL_RATE);  
 }
 
+void checkSerialIncoming() {
+  while (Serial1.available()) {
+    uint8_t cmd=Serial1.read();
+    if ((cmd&0xf0) == CMD_SET_POTI) {
+      uint8_t poti=cmd&0x0f;
+      uint16_t val=Serial1.read()<<8;
+      val+=Serial1.read();
+      Serial.print("incoming: set poti "); Serial.print(poti);
+      Serial.print(" -> "); Serial.println(val);
+      lockAnalogValues[poti]=analogRead(pinPotentiometers[poti]);
+      analogValues[poti]=val;
+    }
+  }
+}
 
 void updateControl() {
-
   usbMIDI.read();
   updateAnalogValues();
+  checkSerialIncoming();
   updateKeys();
   updateSynthControl(analogValues,keys);
   reportFreeRam();
- 
 }
 
 
