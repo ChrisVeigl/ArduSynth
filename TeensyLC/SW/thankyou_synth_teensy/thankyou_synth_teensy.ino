@@ -5,8 +5,35 @@
    
 */
 
+#define USE_NEOPIXEL
 
 #include <MozziGuts.h>
+
+#ifdef USE_NEOPIXEL
+  #include <FastLED.h>
+  #define NUM_LEDS 64 
+  #define LED_DATAPIN 1
+  #define LED_UPDATE_TIME 30
+  CRGB leds[NUM_LEDS];
+  void fadeall() { for(int i = 0; i < NUM_LEDS; i++) { leds[i].nscale8(250); } }
+  void updateLeds() { 
+    static uint8_t hue = 0;
+    static uint16_t actled = 0;
+    static uint32_t lastLedUpdate=0;
+    if (millis() - lastLedUpdate < LED_UPDATE_TIME)  return;
+    lastLedUpdate = millis();  
+    
+    if (actled>=NUM_LEDS*2) actled=0;
+    if (actled < NUM_LEDS) {
+      leds[actled++] = CHSV(hue++, 255, 255);
+      FastLED.show(); 
+    } else { 
+      leds[NUM_LEDS*2-actled++-1] = CHSV(hue++, 255, 255);
+      FastLED.show();
+    }
+    fadeall();
+  }
+#endif
 
 
 #include "display.h"
@@ -77,12 +104,14 @@ void updateAnalogValues() {
 
         if (millis() - lastDisplayUpdate > DISPLAY_UPDATE_TIME)  {
           lastDisplayUpdate = millis();
+  #ifndef USE_NEOPIXEL          
           updateDisplayMessage(i,val);
           if (!keys[NUM_KEYS-1]) {    // if key4 is pressed: send act poti value to connected boards!
             Serial1.write((uint8_t)CMD_SET_POTI+i);
             Serial1.write((uint8_t)(analogValues[i]>>8));
             Serial1.write((uint8_t)(analogValues[i]&0xff));
           }
+  #endif
         }
       }
     }
@@ -100,7 +129,12 @@ void updateKeys() {
 void setup() {
   delay (200);
   Serial.begin(9600);
-  Serial1.begin(115200);
+  #ifdef USE_NEOPIXEL
+    FastLED.addLeds<WS2812,LED_DATAPIN,RGB>(leds,NUM_LEDS);
+    FastLED.setBrightness(84);
+  #else
+    Serial1.begin(115200);
+  #endif
 
   pinMode(PIN_INTERNAL_LED, OUTPUT);
   for (int i=0;i<NUM_KEYS;i++) 
@@ -121,6 +155,7 @@ void setup() {
 }
 
 void checkSerialIncoming() {
+#ifndef USE_NEOPIXEL  
   while (Serial1.available()) {
     uint8_t cmd=Serial1.read();
     if ((cmd&0xf0) == CMD_SET_POTI) {
@@ -133,6 +168,7 @@ void checkSerialIncoming() {
       analogValues[poti]=val;
     }
   }
+#endif
 }
 
 void updateControl() {
@@ -140,6 +176,7 @@ void updateControl() {
   updateAnalogValues();
   checkSerialIncoming();
   updateKeys();
+  updateLeds();
   updateSynthControl(analogValues,keys);
   reportFreeRam();
 }
